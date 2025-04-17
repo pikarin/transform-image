@@ -2,21 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Intervention\Image\Encoders\JpegEncoder;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\RateLimiter;
 use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Laravel\Facades\Image;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\App;
 
 class TransformImageController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
     public function __invoke(Request $request, string $options, string $path)
     {
+        if (App::isProduction()) {
+            $this->rateLimit($request, $path);
+        }
+
         $path = public_path($path);
 
         abort_unless(File::exists($path), 404);
@@ -46,6 +51,17 @@ class TransformImageController extends Controller
         return response($encoded, 200)
             ->header('Content-Type', $encoded->mimetype())
             ->header('Cache-Control', 'public, max-age=2592000, s-maxage=2592000, immutable');
+    }
+
+    protected function rateLimit(Request $request, string $path): void
+    {
+        $isAllowed = RateLimiter::attempt(
+            key: 'transform:' . $request->ip() . ':' . $path,
+            maxAttempts: 4,
+            callback: fn () => true,
+        );
+
+        throw_unless($isAllowed, new HttpResponseException(Redirect::to("/images/$path")));
     }
 
     protected function parseOptions(string $options): array
