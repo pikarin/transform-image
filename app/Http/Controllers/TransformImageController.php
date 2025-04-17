@@ -41,7 +41,10 @@ class TransformImageController extends Controller
             default => new JpegEncoder($quality),
         };
 
-        $image->encode($encoder);
+        $encoded = $image->encode($encoder);
+
+        return response($encoded, 200)
+            ->header('Content-Type', $encoded->mimetype());
     }
 
     protected function parseOptions(string $options): array
