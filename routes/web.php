@@ -5,4 +5,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/images/{options}/{path}', TransformImageController::class)
     ->where('options', '([a-zA-Z]+=[a-zA-Z0-9]+,?)+')
-    ->where('path', '.*\..*');
+    ->where('path', '.*\..*')
+    ->name('images.show');
