@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Laravel\Facades\Image;
 
 class TransformImageController extends Controller
@@ -28,6 +31,17 @@ class TransformImageController extends Controller
 
             $image->scaleDown($width, $height);
         }
+
+        $format = Arr::get($options, 'format', File::extension($path));
+        $quality = (int) Arr::get($options, 'quality', 100);
+
+        $encoder = match (strtolower($format)) {
+            'png' => new PngEncoder,
+            'webp' => new WebpEncoder($quality),
+            default => new JpegEncoder($quality),
+        };
+
+        $image->encode($encoder);
     }
 
     protected function parseOptions(string $options): array
