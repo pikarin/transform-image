@@ -44,7 +44,8 @@ class TransformImageController extends Controller
         $encoded = $image->encode($encoder);
 
         return response($encoded, 200)
-            ->header('Content-Type', $encoded->mimetype());
+            ->header('Content-Type', $encoded->mimetype())
+            ->header('Cache-Control', 'public, max-age=2592000, s-maxage=2592000, immutable');
     }
 
     protected function parseOptions(string $options): array
