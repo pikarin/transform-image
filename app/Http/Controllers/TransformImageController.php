@@ -22,7 +22,7 @@ class TransformImageController extends Controller
             $this->rateLimit($request, $path);
         }
 
-        $path = public_path($path);
+        $path = public_path('images/'.$path);
 
         abort_unless(File::exists($path), 404);
 
